@@ -1,0 +1,736 @@
+{
+  "name": "IMDB - Pipeline ETL",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# O Problema a Ser Resolvido\n\nO IMDB nos contratou para construir um chatbot que ajude usuários a encontrar informações sobre filmes de forma conversacional. Em vez de navegar por páginas e filtros, o usuário simplesmente pergunta:\n\n\"Qual filme de ação tem a melhor avaliação?\"\n\"Me recomenda um filme do Christopher Nolan.\"\n\"Qual é a sinopse de Inception?\"\n\nPara isso, precisamos construir um pipeline completo — desde a coleta dos dados brutos até o chatbot respondendo perguntas em linguagem natural.",
+        "height": 464,
+        "width": 688,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -992,
+        -192
+      ],
+      "id": "52e14420-6128-4f19-8580-09fd5eb99241",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "jsCode": "const filmes = [\n  { titulo: \"The Dark Knight\", ano: \"2008\" },\n  { titulo: \"Inception\", ano: \"2010\" },\n  { titulo: \"The Matrix\", ano: \"1999\" },\n];\n\nreturn filmes.map(filme => ({ json: filme }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "1cfdbe41-1be2-4271-a8d9-9d355f6199fb",
+      "name": "lista_filmes"
+    },
+    {
+      "parameters": {
+        "url": "https://www.omdbapi.com/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "t",
+              "value": "={{ $json.titulo }}"
+            },
+            {
+              "name": "y",
+              "value": "={{ $json.ano }}"
+            },
+            {
+              "name": "apikey",
+              "value": "YOUR_OMDB_API_KEY"
+            },
+            {
+              "name": "plot",
+              "value": "full"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "57e4f622-fd95-4dc8-b7db-16e09f376831",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.all().map(item => {\n  const raw = item.json;\n  \n  const tratar = (valor) =>\n    (!valor || valor === 'N/A') ? null : valor.trim();\n\n  return {\n    json: {\n      id_imdb: tratar(raw.imdbID),\n      titulo: tratar(raw.Title),\n      ano: parseInt(raw.Year) || null,\n      generos: tratar(raw.Genre)\n        ? raw.Genre.split(', ').map(g => g.trim())\n        : [],\n      diretor: tratar(raw.Director),\n      elenco: tratar(raw.Actors),\n      sinopse: tratar(raw.Plot),\n      avaliacao: parseFloat(raw.imdbRating) || null,\n      poster: tratar(raw.Poster),\n      processado_em: new Date().toLocaleDateString('pt-BR')\n    }\n  };\n});\n\nreturn d;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        656,
+        0
+      ],
+      "id": "e0a50a13-885a-4af4-a6a1-1ad2a4bcd9a9",
+      "name": "limpeza - silver"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_URL",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "bronze",
+          "cachedResultUrl": "YOUR_CACHED_RESULT_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sinopse_raw": "={{ $json.Plot }}",
+            "elenco_raw": "={{ $json.Actors }}",
+            "diretor_raw": "={{ $json.Director }}",
+            "genero_raw": "={{ $json.Genre }}",
+            "ano_raw": "={{ $json.Year }}",
+            "titulo_raw": "={{ $json.Title }}",
+            "id_raw": "={{ $json.imdbID }}",
+            "avaliacao_raw": "={{ $json.imdbRating }}",
+            "poster_raw": "={{ $json.Poster }}",
+            "coletado_em": "={{ $now.format('dd/MM/yyyy - HH:mm') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "id_raw",
+              "displayName": "id_raw",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "titulo_raw",
+              "displayName": "titulo_raw",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ano_raw",
+              "displayName": "ano_raw",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "genero_raw",
+              "displayName": "genero_raw",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "diretor_raw",
+              "displayName": "diretor_raw",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "elenco_raw",
+              "displayName": "elenco_raw",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sinopse_raw",
+              "displayName": "sinopse_raw",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "avaliacao_raw",
+              "displayName": "avaliacao_raw",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "poster_raw",
+              "displayName": "poster_raw",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "coletado_em",
+              "displayName": "coletado_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        656,
+        -320
+      ],
+      "id": "4e6153d2-0ced-4f75-9882-6baa84cfe9d0",
+      "name": "salvar_dados_bronze",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Você é um especialista em cinema e está criando descrições para um chatbot de filmes.\n\nCom base nos dados abaixo, escreva um resumo em português de 4 a 6 linhas sobre o filme.\nO resumo deve ser informativo, envolvente e adequado para responder perguntas de usuários\nque querem saber se vale a pena assistir.\n\nTítulo: {{ $json.titulo }}\nAno: {{ $json.ano }}\nGêneros: {{ $json.generos }}\nDiretor: {{ $json.diretor }}\nElenco principal: {{ $json.elenco }}\nSinopse: {{ $json.sinopse }}\nAvaliação IMDB: {{ $json.avaliacao }}/10\n\nRetorne SOMENTE o resumo, sem títulos, sem introdução, sem markdown.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1008,
+        336
+      ],
+      "id": "ed8a995b-9f52-44e7-b121-5480bec72f88",
+      "name": "AI Agent - Gold"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1024,
+        512
+      ],
+      "id": "a6bccf1a-4e63-47f8-aced-d4b38e6dfedf",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_GEMINI_CREDENTIAL_ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_URL",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_SHEET_GID_GOLD",
+          "mode": "list",
+          "cachedResultName": "gold",
+          "cachedResultUrl": "YOUR_CACHED_RESULT_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_imdb": "={{ $('limpeza - silver').item.json.id_imdb }}",
+            "titulo": "={{ $('limpeza - silver').item.json.titulo }}",
+            "ano": "={{ $('limpeza - silver').item.json.ano }}",
+            "avaliacao": "={{ $('limpeza - silver').item.json.avaliacao }}",
+            "resumo_rag": "={{ $json.output }}",
+            "gerado_em": "={{ $now.format('dd/MM/yyyy - HH:mm') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "id_imdb",
+              "displayName": "id_imdb",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "titulo",
+              "displayName": "titulo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ano",
+              "displayName": "ano",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "avaliacao",
+              "displayName": "avaliacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resumo_rag",
+              "displayName": "resumo_rag",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "gerado_em",
+              "displayName": "gerado_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1344,
+        336
+      ],
+      "id": "480190d5-d87b-4935-a5e0-0e36514a06ce",
+      "name": "salvar_dados_gold",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_URL",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_SHEET_GID_SILVER",
+          "mode": "list",
+          "cachedResultName": "silver",
+          "cachedResultUrl": "YOUR_CACHED_RESULT_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_imdb": "={{ $json.id_imdb }}",
+            "titulo": "={{ $json.titulo }}",
+            "ano": "={{ $json.ano }}",
+            "genero": "={{ $json.generos.join(', ') }}",
+            "diretor": "={{ $json.diretor }}",
+            "elenco": "={{ $json.elenco }}",
+            "sinopse": "={{ $json.sinopse }}",
+            "avaliacao": "={{ $json.avaliacao }}",
+            "poster": "={{ $json.poster }}",
+            "processado_em": "={{ $json.processado_em }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "id_imdb",
+              "displayName": "id_imdb",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "titulo",
+              "displayName": "titulo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ano",
+              "displayName": "ano",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "genero",
+              "displayName": "genero",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "diretor",
+              "displayName": "diretor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "elenco",
+              "displayName": "elenco",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sinopse",
+              "displayName": "sinopse",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "avaliacao",
+              "displayName": "avaliacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "poster",
+              "displayName": "poster",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "processado_em",
+              "displayName": "processado_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1008,
+        -64
+      ],
+      "id": "234e8ff4-2469-4552-b1de-d59b1644e120",
+      "name": "salvar_dados_silver",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Trigger\nInicia workflow manualmente",
+        "height": 320,
+        "width": 208
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        -128
+      ],
+      "id": "bc2f58d0-f622-4d6e-944b-b1029d4aacaa",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "134f7850-efbe-4c43-a070-c9932bc1447c",
+      "name": "When clicking 'Execute workflow'"
+    },
+    {
+      "parameters": {
+        "content": "## Lista de filmes\nLista de filmes que vamos buscar no OMDB e adicionar nas planilhas",
+        "height": 320,
+        "width": 192
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        160,
+        -128
+      ],
+      "id": "bc6faa53-0081-4166-a418-a52f7aadc5bc",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Extract\nExtração dos filmes da lista direto da API do OMDB",
+        "height": 320,
+        "width": 192,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        368,
+        -128
+      ],
+      "id": "32770585-0cb6-448e-b6ee-f75a2b0f5872",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Salvando os dados brutos (camada bronze)\nSalvando os dados brutos no DataLake bronze",
+        "height": 256,
+        "width": 528,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        608,
+        -416
+      ],
+      "id": "8855a78b-d02d-454f-aa57-e55f8031fdb5",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## Transform\nTratando os dados brutos",
+        "height": 320,
+        "width": 224,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        608,
+        -128
+      ],
+      "id": "194d49f5-937a-40fa-a6e5-94e71aa73a66",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "## Salvando os dados tratados (silver)\nSalvando os dados tratados no DataLake silver",
+        "height": 240,
+        "width": 752,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        960,
+        -144
+      ],
+      "id": "d729f784-f7a6-4364-903f-b5dd1eff6d60",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "## Gerando resumos dos filmes\nGerando resumos dos filmes, que irá para a camada Gold do DataLake",
+        "height": 528,
+        "width": 320,
+        "color": "#665929"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        960,
+        128
+      ],
+      "id": "a2399aab-0685-4da0-85b4-8df35e3b394e",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "## Salvando os dados prontos para RAG (gold)\nSalvando os dados já tratados e finalizados, tudo pronto para o RAG, no DataLake gold",
+        "height": 528,
+        "width": 416,
+        "color": "#665929"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1296,
+        128
+      ],
+      "id": "2b4895a6-9002-4679-b09b-94c1ce4342da",
+      "name": "Sticky Note8"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "lista_filmes": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "salvar_dados_bronze",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "limpeza - silver",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "salvar_dados_bronze": {
+      "main": [
+        []
+      ]
+    },
+    "limpeza - silver": {
+      "main": [
+        [
+          {
+            "node": "salvar_dados_silver",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Agent - Gold",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent - Gold",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Gold": {
+      "main": [
+        [
+          {
+            "node": "salvar_dados_gold",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking 'Execute workflow'": {
+      "main": [
+        [
+          {
+            "node": "lista_filmes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "af3f3ddf-9195-4729-81ea-bf936e3b5a82",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_INSTANCE_ID"
+  },
+  "id": "YOUR_WORKFLOW_ID",
+  "tags": []
+}

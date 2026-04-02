@@ -1,0 +1,17 @@
+[project]
+name = "projeto-03-rag-com-embeddings"
+version = "0.1.0"
+description = "This project was made to Geração Tech's GenAI course. In this course, we're currently in the module 02, about RAG and LangChain. In this project, we created an chatbot with RAG, that allows the users send their PDF files, YouTubeURLs and even images, and the LLM will answer their questions with the content of the material sent by the user. This project doesn't have any interface made in Streamlit or Django. It run only in terminal."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "faiss-cpu>=1.13.2",
+    "langchain-community>=0.4.1",
+    "langchain-text-splitters>=1.1.0",
+    "langchain[google-genai]>=1.2.10",
+    "pillow>=12.1.1",
+    "pypdf>=6.7.1",
+    "python-dotenv>=1.2.1",
+    "rich>=14.3.2",
+    "youtube-transcript-api>=1.2.4",
+]

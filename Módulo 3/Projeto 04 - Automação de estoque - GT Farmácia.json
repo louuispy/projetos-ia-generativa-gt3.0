@@ -1,0 +1,429 @@
+{
+  "name": "Workflow - ETL conceitual",
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_URL",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_SHEET_GID",
+          "mode": "list",
+          "cachedResultName": "estoque",
+          "cachedResultUrl": "YOUR_CACHED_RESULT_URL"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        0
+      ],
+      "id": "40c72ea5-8732-4f28-9e5d-5704c211fc5a",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "89ac28c5-b284-44d5-9583-f3d2ecc50409",
+              "leftValue": "={{ $json.Quantidade }}",
+              "rightValue": "={{ $json['Estoque Mínimo'] }}",
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        0
+      ],
+      "id": "862e62dc-8132-4f19-80fa-00fd3226d9d0",
+      "name": "verifica estoque"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "81cd6e02-4d0d-4ace-abec-8e151f6345d7",
+              "leftValue": "={{ $('Get row(s) in sheet').item.json.Quantidade }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        624,
+        -96
+      ],
+      "id": "54a7c433-d589-4611-a695-a51f352836cd",
+      "name": "verifica_zerado"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53473cd4-c3c7-4f9e-a752-21439b1c3f56",
+              "name": "Urgência",
+              "value": "CRÍTICO - Produto Zerado",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        832,
+        -192
+      ],
+      "id": "cedb6369-4576-4eab-a214-f3f2b234ae70",
+      "name": "urgencia_zerado"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a2d5bfb9-fdce-427a-8469-f46ff10af111",
+              "name": "Urgência",
+              "value": "ATENÇÃO - Estoque Baixo",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        832,
+        0
+      ],
+      "id": "830f9474-1d5a-433a-9150-fbdd9d4a8e01",
+      "name": "estoque_baixo"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1152,
+        -96
+      ],
+      "id": "31d10bd6-b6bf-4fde-9aea-b26d11b9e04f",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_URL",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "alertas",
+          "cachedResultUrl": "YOUR_CACHED_RESULT_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Data": "={{ $now.format('dd-MM-yyyy') }}",
+            "Produto": "={{ $('Get row(s) in sheet').item.json.Produto }}",
+            "Quantidade Atual": "={{ $('Get row(s) in sheet').item.json.Quantidade }}",
+            "Estoque Mínimo": "={{ $('Get row(s) in sheet').item.json['Estoque Mínimo'] }}",
+            "Filial": "={{ $('Get row(s) in sheet').item.json.Filial }}",
+            "Urgência": "={{ $json['Urgência'] }}",
+            "Hora": "={{ $now.format(\"HH':'mm \") }}",
+            "Déficit de estoque": "={{ $('Get row(s) in sheet').item.json.Quantidade - $('Get row(s) in sheet').item.json['Estoque Mínimo']}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Data",
+              "displayName": "Data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Hora",
+              "displayName": "Hora",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Produto",
+              "displayName": "Produto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Quantidade Atual",
+              "displayName": "Quantidade Atual",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estoque Mínimo",
+              "displayName": "Estoque Mínimo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Filial",
+              "displayName": "Filial",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Urgência",
+              "displayName": "Urgência",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Déficit de estoque",
+              "displayName": "Déficit de estoque",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1360,
+        -96
+      ],
+      "id": "4c2ded49-bfd2-4181-9167-cf87f6cc0caf",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a1b2e8a9-a035-4b5b-8ede-9143167a2213",
+      "name": "When clicking 'Execute workflow'"
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL",
+        "subject": "Relatório de estoque de produtos",
+        "emailType": "text",
+        "message": "=Relatório de estoque de produtos\n\nData: {{ $json.Data }}\nHora: {{ $json.Hora }}\n\nProdutos e Urgência\n- Produtos: {{ $json.Produto }}\n\n- Quantidade atual: {{ $json['Quantidade Atual'] }}\n- Estoque mínimo: {{ $json['Estoque Mínimo'] }}\n- Déficit: {{ $json['Déficit de estoque'] }}\n- Filial: {{ $json.Filial }}\n- Urgência: {{ $json['Urgência'] }}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1584,
+        -96
+      ],
+      "id": "c80d8e0a-df8a-433d-8164-d746d9444e90",
+      "name": "Send a message",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "verifica estoque",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verifica estoque": {
+      "main": [
+        [
+          {
+            "node": "verifica_zerado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verifica_zerado": {
+      "main": [
+        [
+          {
+            "node": "urgencia_zerado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "estoque_baixo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "estoque_baixo": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "urgencia_zerado": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking 'Execute workflow'": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "003522b3-9460-43c4-8fc1-77d90fd307d2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_INSTANCE_ID"
+  },
+  "id": "YOUR_WORKFLOW_ID",
+  "tags": []
+}

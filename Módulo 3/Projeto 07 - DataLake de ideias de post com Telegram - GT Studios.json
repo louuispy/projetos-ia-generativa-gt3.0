@@ -1,0 +1,332 @@
+{
+  "name": "GT Studios - 02 - Telegram",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        80,
+        208
+      ],
+      "id": "bf5e0c5f-75d9-4236-b60d-b879425a7403",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_GEMINI_CREDENTIAL_ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_URL",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Página1",
+          "cachedResultUrl": "YOUR_CACHED_RESULT_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "DATA": "={{ $now.format('dd/MM/yyyy HH:mm') }}",
+            "CLIENTE": "={{ JSON.parse($('llm_extracao').item.json.output).cliente }}",
+            "TEMA": "={{ JSON.parse($('llm_extracao').item.json.output).tema }}",
+            "TOM": "={{ JSON.parse($('llm_extracao').item.json.output).tom }}",
+            "NÚMERO DE VARIAÇÃO": "={{ $json.numero }}",
+            "IDEIA DE POST": "={{ $json.variacao }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "DATA",
+              "displayName": "DATA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CLIENTE",
+              "displayName": "CLIENTE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TEMA",
+              "displayName": "TEMA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TOM",
+              "displayName": "TOM",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "NÚMERO DE VARIAÇÃO",
+              "displayName": "NÚMERO DE VARIAÇÃO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "IDEIA DE POST",
+              "displayName": "IDEIA DE POST",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1344,
+        144
+      ],
+      "id": "8335119f-f7d5-4904-85f9-4f9a3e6eb865",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const texto = $input.first().json.output;\n\nconst variacoes = texto\n  .split('---')\n  .map(v => v.trim())\n  .filter(v => v.length > 0);\n\nreturn variacoes.map((variacao, index) => ({\n  json: {\n    variacao: variacao,\n    numero: index + 1\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1024,
+        144
+      ],
+      "id": "c6465b01-0f38-4805-8209-0502aebb11b4",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "baf4445e-af21-4281-8e88-08fff5077ee7",
+      "name": "Telegram Trigger",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Você é um assistente da agência GT Studio.\n\nO cliente enviou a seguinte mensagem:\n\"{{ $json.message.text }}\"\n\nExtraia as seguintes informações e responda SOMENTE com JSON puro, sem explicações, sem crases, sem markdown:\n{\n  \"cliente\": \"nome do cliente ou empresa\",\n  \"tema\": \"tema do post\",\n  \"tom\": \"tom de voz desejado\"\n}\n\nSe alguma informação não estiver clara, use valores padrão:\n- cliente: \"Cliente GT Studio\"\n- tema: \"conteúdo geral\"\n- tom: \"profissional\"",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "a96412ac-fbdd-43cc-be4d-c5402f0f901b",
+      "name": "llm_extracao"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Você é um especialista em marketing digital para redes sociais.\n\nSeu cliente é: {{ JSON.parse($json.output).cliente }}\nTema do post: {{ JSON.parse($json.output).tema }}\nTom de voz: {{ JSON.parse($json.output).tom }}\n\nCrie 3 variações de post para Instagram/LinkedIn sobre esse tema.\nCada variação deve:\n- Ter entre 3 e 5 linhas\n- Terminar com 3 hashtags relevantes\n- Seguir o tom de voz indicado\n\nSepare cada variação com \"---\".\n\nRetorne-me SOMENTE as variações, nada mais.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        560,
+        0
+      ],
+      "id": "c991d67b-0b7b-456a-8afe-f69023f3773a",
+      "name": "llm_geracao"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        432,
+        208
+      ],
+      "id": "c99688a2-1b5a-4532-b48f-2eb2a5453ed4",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_GEMINI_CREDENTIAL_ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $('llm_geracao').item.json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1024,
+        -96
+      ],
+      "id": "2c60f607-c136-4ac2-871d-c07701b8485e",
+      "name": "Send a text message",
+      "webhookId": "YOUR_WEBHOOK_ID_2",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "llm_extracao",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "llm_extracao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "llm_extracao": {
+      "main": [
+        [
+          {
+            "node": "llm_geracao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "llm_geracao",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "llm_geracao": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        []
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "92dbaf02-e1e2-43f9-b6dc-fe9ff4498694",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_INSTANCE_ID"
+  },
+  "id": "YOUR_WORKFLOW_ID",
+  "tags": []
+}

@@ -1,0 +1,543 @@
+{
+  "name": "Multiagentes",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "responseMode": "responseNodes"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -240,
+        0
+      ],
+      "id": "8f2b14ee-3c19-4b5a-b2da-4da7b93a5cf1",
+      "name": "When chat message received",
+      "webhookId": "YOUR_WEBHOOK_ID"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        80,
+        176
+      ],
+      "id": "9bdf2ee2-75b3-4a02-bb62-9bcc7f0e4172",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_GEMINI_CREDENTIAL_ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        208,
+        176
+      ],
+      "id": "1ff8a378-4f95-4207-9345-5388e69b72a0",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Você é uma IA pronta para o atendimento da empresa Click Automações, uma empresa de serviços de automação de envio de emails e agendamento de reuniões em contatos.\n\nSe o cliente pedir para enviar um email, utilize a tool \"Agente de Emails\"\n\nSe o cliente pedir para agendar uma reunião com uma pessoa, use a tool de \"Contatos\" para verificar se a pessoa está na lista de contatos. Se não estiver, solicite o usuário o Nome e Email para criar o contato. Após isso, agende então uma reunião.\n\nSe o cliente pedir para adicionar um contato, use a tool de \"Contatos\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        144,
+        0
+      ],
+      "id": "4bbbe7a8-7e23-4840-8234-ed19f2cbf884",
+      "name": "Agente orquestrador"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Um agente de IA da Click Automações, especializado em envio de emails",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        -96,
+        480
+      ],
+      "id": "c5a38696-fd5b-4261-a6bf-0938f5e29114",
+      "name": "Agente de Emails"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        672
+      ],
+      "id": "014b6b4c-768b-4f5a-b4f9-cbd7e0a65c86",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_GEMINI_CREDENTIAL_ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -112,
+        736
+      ],
+      "id": "3655df65-fc9b-43c8-b85e-21d0dffe261c",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double",
+            "approveLabel": "Enviar",
+            "disapproveLabel": "=Não enviar"
+          }
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatHitlTool",
+      "typeVersion": 1.2,
+      "position": [
+        -16,
+        720
+      ],
+      "id": "12823b63-20ae-44e5-9dca-db80f3c72e5b",
+      "name": "Verificar Envio de Email",
+      "webhookId": "YOUR_WEBHOOK_ID_2"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Um agente de IA da Click Automações, especializado em agendamento de reuniões nos contatos da empresa.",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        432,
+        480
+      ],
+      "id": "d9e6800b-ff74-4de9-8996-9f87a88213de",
+      "name": "Contatos"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        448,
+        768
+      ],
+      "id": "8693952a-77e8-41f0-b86f-c272ff7c7370",
+      "name": "Simple Memory2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        336,
+        640
+      ],
+      "id": "59fcb35b-4635-4954-bd6e-c440c4e5ea24",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_GEMINI_CREDENTIAL_ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.2,
+      "position": [
+        560,
+        0
+      ],
+      "id": "996ad625-503c-4d7d-be7a-060784b3307b",
+      "name": "Chat",
+      "webhookId": "YOUR_WEBHOOK_ID_3"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        32,
+        880
+      ],
+      "id": "4ec963e5-729f-41a2-985b-5ff176dc2bab",
+      "name": "enviar_email",
+      "webhookId": "YOUR_WEBHOOK_ID_4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "familyName": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Family_Name', ``, 'string') }}",
+        "givenName": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Given_Name', ``, 'string') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleContactsTool",
+      "typeVersion": 1,
+      "position": [
+        736,
+        688
+      ],
+      "id": "b6051e5a-5864-4051-9577-273df4c2b55d",
+      "name": "criar_contato",
+      "credentials": {
+        "googleContactsOAuth2Api": {
+          "id": "YOUR_GOOGLE_CONTACTS_CREDENTIAL_ID",
+          "name": "Google Contacts account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "contactId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Contact_ID', ``, 'string') }}",
+        "fields": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Fields', ``, 'string') }}"
+      },
+      "type": "n8n-nodes-base.googleContactsTool",
+      "typeVersion": 1,
+      "position": [
+        848,
+        656
+      ],
+      "id": "aad10e1d-1de7-48f6-84c2-8a986d0008f9",
+      "name": "obter_contato",
+      "credentials": {
+        "googleContactsOAuth2Api": {
+          "id": "YOUR_GOOGLE_CONTACTS_CREDENTIAL_ID",
+          "name": "Google Contacts account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_CALENDAR_EMAIL",
+          "mode": "list",
+          "cachedResultName": "YOUR_GOOGLE_CALENDAR_EMAIL"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        608,
+        688
+      ],
+      "id": "06e84041-bbff-4145-b8e1-fee2a09a1af9",
+      "name": "criar_evento",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "YOUR_GOOGLE_CALENDAR_CREDENTIAL_ID",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Trigger de chat",
+        "height": 256
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        -80
+      ],
+      "id": "899d1914-e6ce-4441-8a54-081953d5c547",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Resposta no chat",
+        "height": 256,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        496,
+        -80
+      ],
+      "id": "53b6aeb0-31eb-413d-a752-aa3624f0f1f4",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Agente orquestrador",
+        "height": 384,
+        "width": 416,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        16,
+        -80
+      ],
+      "id": "aff09c91-5353-4638-abcd-594cf234ec42",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Agente especializado em email\nEsse agente é especializado em enviar emails.\nTem Human-In-The-Loop. O email só enviado se você aprovar",
+        "height": 672,
+        "width": 608,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        352
+      ],
+      "id": "8d714d17-34cf-4bcf-b4eb-f933194ac86b",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Agente especializado em contatos e agendamentos\nEsse agente é especializado ler e criar contatos, além de agendar reuniões",
+        "height": 672,
+        "width": 688,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        272,
+        352
+      ],
+      "id": "b44ccfd0-0ef4-4b45-af0e-03f2d02d2a36",
+      "name": "Sticky Note4"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Agente orquestrador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente orquestrador",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agente orquestrador",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente orquestrador": {
+      "main": [
+        [
+          {
+            "node": "Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente de Emails": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente orquestrador",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente de Emails",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agente de Emails",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar Envio de Email": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente de Emails",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contatos": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente orquestrador",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory2": {
+      "ai_memory": [
+        [
+          {
+            "node": "Contatos",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Contatos",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "enviar_email": {
+      "ai_tool": [
+        [
+          {
+            "node": "Verificar Envio de Email",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "criar_contato": {
+      "ai_tool": [
+        [
+          {
+            "node": "Contatos",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "obter_contato": {
+      "ai_tool": [
+        [
+          {
+            "node": "Contatos",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "criar_evento": {
+      "ai_tool": [
+        [
+          {
+            "node": "Contatos",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "0b961b68-8511-4941-863d-ded47101e378",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_INSTANCE_ID"
+  },
+  "id": "YOUR_WORKFLOW_ID",
+  "tags": []
+}

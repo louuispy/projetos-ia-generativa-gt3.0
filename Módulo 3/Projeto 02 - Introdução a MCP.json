@@ -1,0 +1,434 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Venha fazer parte da GT Systems!",
+        "formDescription": "🚀 VAGAS ABERTAS - GT SYSTEMS\n\nA GT Systems é uma startup de tecnologia focada em sistemas inteligentes, dados e automação. Estamos expandindo o time!\n\nVAGAS:\n\nDev Júnior\n\nEstagiário(a) de BI\n\nEstagiário(a) de Marketing\n\nEstagiário(a) Videomaker\n\nRequisitos para as vagas: estar matriculado em alguma faculdade relacionada à área que deseja atuar.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Nome"
+            },
+            {
+              "fieldLabel": "E-mail para contato",
+              "fieldType": "email",
+              "placeholder": "seuemail@dominio.com"
+            },
+            {
+              "fieldLabel": "Vaga desejada",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Dev Júnior"
+                  },
+                  {
+                    "option": "Estagiário(a) de BI"
+                  },
+                  {
+                    "option": "Estagiário(a) de Marketing"
+                  },
+                  {
+                    "option": "Estagiário(a) Videomaker"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Você faz faculdade?",
+              "fieldType": "radio",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Sim"
+                  },
+                  {
+                    "option": "Não"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Descreva suas principais habilidades técnicas: "
+            },
+            {
+              "fieldLabel": "Você já trabalhou antes na área da vaga que deseja?",
+              "fieldType": "radio",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Nunca trabalhei"
+                  },
+                  {
+                    "option": "Já fiz estágio"
+                  },
+                  {
+                    "option": "Já trabalhei formalmente"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Envie o link do seu Github, Behance ou site de Portfólio"
+            },
+            {
+              "fieldLabel": "Qual a sua pretensão salarial?",
+              "fieldType": "number"
+            },
+            {
+              "fieldLabel": "Por que você quer trabalhar no GT Systems?"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e5f1a300-5f2a-4ba1-9109-6b80c5f505af",
+      "name": "On form submission",
+      "webhookId": "YOUR_WEBHOOK_ID"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=O candidato {{ $json.Nome }}\nque possui o email {{ $json['E-mail para contato'] }}\nse inscreveu para a vaga {{ $json['Vaga desejada'] }}\nele informou se está ou não em uma faculdade: {{ $json['Você faz faculdade?'] }}\nele informou suas habilidades técnicas: {{ $json['Descreva suas principais habilidades técnicas: '] }}\nele informou se já trabalhou antes na área: {{ $json['Você já trabalhou antes na área da vaga que deseja?'] }}\nele informou sua pretensão salarial: {{ $json['Qual a sua pretensão salarial?'] }}\nanalise se o candidato é adequado para a vaga.",
+        "options": {
+          "systemMessage": "Você é um agente de RH da GT Systems.\n\nSeu papel é analisar candidatos e decidir a melhor classificação possível.\n\nClassificações possíveis:\n\nENTREVISTA\n\nBANCO_DE_TALENTOS\n\nREJEITADO\n\nRegras:\n\nSe não fizer faculdade → REJEITADO\n\nConsulte sempre a ferramenta ler_salario para verificar o limite da vaga.\n\nSe pretensão salarial estiver acima do limite → BANCO_DE_TALENTOS\n\nSe estiver dentro do limite → avaliar habilidades e motivação.\n\nGere score técnico (0 a 10).\n\nGere score comportamental (0 a 10).\n\nSalve o candidato usando a ferramenta salvar_candidato.\n\nEnvie e-mail apropriado usando enviar_email.\n\nSempre utilize as ferramentas para concluir o processo.\n\nApó"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "9d45db3c-46cc-4e12-b8b1-ab6541d34a27",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        80,
+        208
+      ],
+      "id": "ec1e2a12-d1ec-4ec6-9795-f19f2be0e21e",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_GEMINI_CREDENTIAL_ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_URL",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Página1",
+          "cachedResultUrl": "YOUR_CACHED_RESULT_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "NOME": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('NOME', ``, 'string') }}",
+            "EMAIL": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('EMAIL', ``, 'string') }}",
+            "VAGA": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('VAGA', ``, 'string') }}",
+            "PRETENSÃO SALARIAL": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('PRETENS_O_SALARIAL', ``, 'string') }}",
+            "CLASSIFICAÇÃO": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('CLASSIFICA__O', ``, 'string') }}",
+            "SCORE_TÉCNICO": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('SCORE_T_CNICO', ``, 'string') }}",
+            "SCORE_COMPORTAMENTAL": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('SCORE_COMPORTAMENTAL', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "NOME",
+              "displayName": "NOME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "EMAIL",
+              "displayName": "EMAIL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "VAGA",
+              "displayName": "VAGA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "PRETENSÃO SALARIAL",
+              "displayName": "PRETENSÃO SALARIAL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CLASSIFICAÇÃO",
+              "displayName": "CLASSIFICAÇÃO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "SCORE_TÉCNICO",
+              "displayName": "SCORE_TÉCNICO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "SCORE_COMPORTAMENTAL",
+              "displayName": "SCORE_COMPORTAMENTAL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        192,
+        720
+      ],
+      "id": "c276ce5c-9679-431d-b393-c9a031f75a88",
+      "name": "salvar_candidato",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        352,
+        720
+      ],
+      "id": "b22291f6-b381-4d6f-8751-446b08eb4089",
+      "name": "enviar_email",
+      "webhookId": "YOUR_WEBHOOK_ID_2",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_URL",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Página1",
+          "cachedResultUrl": "YOUR_CACHED_RESULT_URL"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        32,
+        720
+      ],
+      "id": "cf87f063-0310-4266-a0b2-923eda0326a7",
+      "name": "ler_salario",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "YOUR_MCP_PATH_ID"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 2,
+      "position": [
+        0,
+        544
+      ],
+      "id": "26acee16-ec33-49e5-8cc8-f7c3d5c21b43",
+      "name": "MCP Server Trigger",
+      "webhookId": "YOUR_MCP_PATH_ID"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "YOUR_MCP_ENDPOINT_URL",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        416,
+        224
+      ],
+      "id": "af009551-43b4-4ce8-b6dc-2fc1391c42f7",
+      "name": "MCP Client"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $execution.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        208
+      ],
+      "id": "71ddec9a-c264-4d9e-ada1-7c94ae5b03fb",
+      "name": "Simple Memory"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "salvar_candidato": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "enviar_email": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ler_salario": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "5b993b1c-8fc1-44ee-b9f0-472ad9bee019",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_INSTANCE_ID"
+  },
+  "id": "YOUR_WORKFLOW_ID",
+  "tags": []
+}

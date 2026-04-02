@@ -1,0 +1,374 @@
+{
+  "name": "Aula 01 - N8N - Geração Tech",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Trigger\nEnvio do formulário de vagas",
+        "width": 182
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        -192
+      ],
+      "id": "1e00236f-7e9e-44c2-80ca-9308ebad0e19",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5c9ad5b9-3f41-46eb-973f-edcfd3e822cc",
+              "leftValue": "={{ $json['Qual a sua pretensão salarial?'] }}",
+              "rightValue": 3000,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            },
+            {
+              "id": "554c860a-89cd-4cbf-976b-b819cc0e335b",
+              "leftValue": "={{ $json['Você está fazendo alguma faculdade no momento?'] }}",
+              "rightValue": "Não",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "9d089c1e-0a2e-4a5c-a02c-e7cef6225a62",
+      "name": "verifica_faculdade_salario"
+    },
+    {
+      "parameters": {
+        "formTitle": "Venha fazer parte da GT Systems!",
+        "formDescription": "🚀 VAGAS ABERTAS - GT SYSTEMS\n\nA GT Systems é uma startup de tecnologia focada em sistemas inteligentes, dados e automação. Estamos expandindo o time!\n\nVAGAS:\n\nDev Júnior\n\nEstagiário(a) de BI\n\nEstagiário(a) de Marketing\n\nEstagiário(a) Videomaker\n\nRequisitos para as vagas: estar matriculado em alguma faculdade relacionada à área que deseja atuar.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Nome:",
+              "placeholder": "Digite o seu nome aqui"
+            },
+            {
+              "fieldLabel": "E-mail para contato:",
+              "fieldType": "email",
+              "placeholder": "example@email.com"
+            },
+            {
+              "fieldLabel": "Vaga desejada:",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Dev Júnior"
+                  },
+                  {
+                    "option": "Estagiário(a) de BI"
+                  },
+                  {
+                    "option": "Estagiário(a) de Marketing"
+                  },
+                  {
+                    "option": "Estagiário(a) Videomaker"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Você está fazendo alguma faculdade no momento?",
+              "fieldType": "radio",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Sim"
+                  },
+                  {
+                    "option": "Não"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Qual a sua pretensão salarial?",
+              "fieldType": "number",
+              "placeholder": "R$0000,00"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "802e809e-b1d7-402d-9ce4-ccc8c12f6842",
+      "name": "formulario_vaga",
+      "webhookId": "YOUR_WEBHOOK_ID"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('formulario_vaga').item.json['E-mail para contato:'] }}",
+        "subject": "=Obrigado por se candidatar na GT Systems, {{ $json['Nome:'] }}!",
+        "message": "=Olá, {{ $json['Nome:'] }}!\nRecebemos a sua candidatura para a vaga de {{ $json['Vaga desejada:'] }} na nossa empresa.\n\nDepois de uma análise minusciosa, optamos por não prosseguir com sua candidatura.\n\nMas não desista! Seu nome está armazenado em nosso banco de talentos. Posteriormente, quando uma nova oportunidade surgir, você poderá ser chamado.\n\nAtt,\nRH - GT Systems.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        528,
+        -96
+      ],
+      "id": "66bb5d40-6686-4371-825f-8df3669d0029",
+      "name": "email_candidatura_falhou",
+      "webhookId": "YOUR_WEBHOOK_ID_2",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_URL",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Página1",
+          "cachedResultUrl": "YOUR_CACHED_RESULT_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "NOME": "={{ $('formulario_vaga').item.json['Nome:'] }}",
+            "EMAIL": "={{ $('formulario_vaga').item.json['E-mail para contato:'] }}",
+            "PRETENSÃO SALARIAL": "={{ $('formulario_vaga').item.json['Qual a sua pretensão salarial?'] }}",
+            "VAGA DESEJADA": "={{ $('formulario_vaga').item.json['Vaga desejada:'] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "NOME",
+              "displayName": "NOME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "EMAIL",
+              "displayName": "EMAIL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "VAGA DESEJADA",
+              "displayName": "VAGA DESEJADA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "PRETENSÃO SALARIAL",
+              "displayName": "PRETENSÃO SALARIAL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        528,
+        96
+      ],
+      "id": "5a240488-bbc1-4f80-bbc1-4cd6f45ea1bd",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Condicional \nVerifica se o candidato faz faculdade e se a pretensão dele é menor que 3000",
+        "width": 176
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        192,
+        -192
+      ],
+      "id": "c90eae56-edc7-4526-9fc5-fc80ffd32462",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Se não fizer faculdade ou pretensão maior que 3000\nEnvia email descontinuando a candidatura",
+        "height": 224
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        480,
+        -352
+      ],
+      "id": "a2fa2021-2868-49b6-8c89-9a372702623b",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Se fizer faculdade e pretensão menor que 3000\nAdiciona candidato na planilha de candidatos",
+        "height": 176
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        480,
+        272
+      ],
+      "id": "abd80187-dd3c-43ee-b05e-2c6f297df134",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('formulario_vaga').item.json['E-mail para contato:'] }}",
+        "subject": "=Retorno - Vaga de {{ $('formulario_vaga').item.json['Vaga desejada:'] }} na GT Systems",
+        "message": "=Olá, {{ $('formulario_vaga').item.json['Nome:'] }},  Parabéns! 🎉 \nSua candidatura para a vaga de {{ $('formulario_vaga').item.json['Vaga desejada:'] }} foi analisada e você foi aprovado(a) na etapa inicial de triagem do nosso processo seletivo.  \n\nIsso significa que seu perfil atende aos critérios básicos da vaga e seguirá para as próximas etapas da seleção.  \nEm breve, nossa equipe entrará em contato com mais informações sobre o andamento do processo. \n\nAgradecemos pelo seu interesse na GT Systems e desejamos boa sorte nas próximas fases!  \n\nAtenciosamente,\nEquipe GT Systems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        736,
+        96
+      ],
+      "id": "5564069d-4e01-43eb-8bd1-315ad53ee01c",
+      "name": "Send a message",
+      "webhookId": "YOUR_WEBHOOK_ID_3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "formulario_vaga": [
+      {
+        "json": {
+          "Nome:": "Candidato Exemplo",
+          "E-mail para contato:": "candidato@example.com",
+          "Vaga desejada:": "Dev Júnior",
+          "Você está fazendo alguma faculdade no momento?": "Sim",
+          "Qual a sua pretensão salarial?": 2999,
+          "submittedAt": "2026-01-01T00:00:00.000-03:00",
+          "formMode": "test"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "verifica_faculdade_salario": {
+      "main": [
+        [
+          {
+            "node": "email_candidatura_falhou",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "formulario_vaga": {
+      "main": [
+        [
+          {
+            "node": "verifica_faculdade_salario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "546fc521-bbe0-4510-9720-e039ecef633b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_INSTANCE_ID"
+  },
+  "id": "YOUR_WORKFLOW_ID",
+  "tags": []
+}
